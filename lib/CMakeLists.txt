@@ -20,6 +20,11 @@ if (NOT TARGET easy)
   target_include_directories(easy INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/easy)
 endif()
 
+if (NOT TARGET json)
+  add_library(json INTERFACE)
+  target_include_directories(json INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/json)
+endif()
+
 if(TWEEDLEDUM_USE_EXTERNAL_FMT)
   if (NOT TARGET fmt)
     find_package(fmt REQUIRED)
