@@ -18,6 +18,7 @@ namespace tweedledum {
 struct barenco_params {
 	uint32_t controls_threshold = 2u;
 	bool use_ncrx = true; // Relative phase
+	bool enable_ancilla = false;
 };
 
 namespace detail {
@@ -53,10 +54,8 @@ void barenco_decomp(Circuit& circuit, gate const& g, std::vector<wire::id> const
 		workspace.push_back(wire);
 	});
 	const uint32_t workspace_size = workspace.size();
-	if (workspace_size == 0) {
-		std::cout << "[e] no sufficient helper line found for mapping, break\n";
-		return;
-	}
+	
+
 
 	gate const& compute_gate = params.use_ncrx ? gate_lib::ncrx(sym_angle::pi) : gate_lib::ncx;
 	gate const& uncompute_gate = params.use_ncrx ? gate_lib::ncrx(-sym_angle::pi) : gate_lib::ncx;
@@ -72,26 +71,30 @@ void barenco_decomp(Circuit& circuit, gate const& g, std::vector<wire::id> const
 		// When offset is 1 this is cleaning up the workspace, that is, restoring the state
 		// to their initial state
 		for (int offset = 0; offset <= 1; ++offset) {
+
 			for (int i = offset; i < static_cast<int>(num_controls) - 2; ++i) {
 				circuit.create_op(i ? compute_gate : gate_lib::ncx,
-				                  std::vector({controls[num_controls - 1 - i],
-				                               workspace[workspace_size - 1 - i]}),
-				                  std::vector({workspace[workspace_size - i]}));
+													std::vector({controls[num_controls - 1 - i],
+																			workspace[workspace_size - 1 - i]}),
+													std::vector({workspace[workspace_size - i]}));
 			}
-
+			
 			circuit.create_op(offset ? uncompute_gate : compute_gate,
 			                  std::vector({controls[0], controls[1]}),
 			                  std::vector({workspace[workspace_size - (num_controls - 2)]}));
-
+			
 			for (int i = num_controls - 2 - 1; i >= offset; --i) {
 				circuit.create_op(i ? uncompute_gate : gate_lib::ncx,
-				                  std::vector({controls[num_controls - 1 - i],
-				                               workspace[workspace_size - 1 - i]}),
-				                  std::vector({workspace[workspace_size - i]}));
+													std::vector({controls[num_controls - 1 - i],
+																			workspace[workspace_size - 1 - i]}),
+													std::vector({workspace[workspace_size - i]}));
 			}
+			
+
 		}
+
 		return;
-	}
+	}	
 
 	// Not enough qubits in the workspace, extra decomposition step
 	// Lemma 7.3: For any n ≥ 5, and m ∈ {2, ... , n − 3} a (n−2)-toffoli gate can be simulated
@@ -104,12 +107,24 @@ void barenco_decomp(Circuit& circuit, gate const& g, std::vector<wire::id> const
 	for (auto i = (num_controls >> 1); i < num_controls; ++i) {
 		controls1.push_back(controls[i]);
 	}
-	wire::id free_qubit = workspace.front();
-	controls1.push_back(free_qubit);
-	barenco_decomp(circuit, compute_gate, controls0, free_qubit, params);
-	barenco_decomp(circuit, g, controls1, target, params);
-	barenco_decomp(circuit, uncompute_gate, controls0, free_qubit, params);
-	barenco_decomp(circuit, g, controls1, target, params);
+	
+	if (workspace_size == 0 && params.enable_ancilla) {
+		std::cout << "clean ancilla added\n";
+		wire::id ancilla = circuit.create_qubit();
+		controls1.push_back(ancilla);
+		barenco_decomp(circuit, compute_gate, controls0, ancilla, params);
+		barenco_decomp(circuit, g, controls1, target, params);
+		barenco_decomp(circuit, uncompute_gate, controls0, ancilla, params);
+	}
+	else {
+		wire::id free_qubit = workspace.front();
+		controls1.push_back(free_qubit);
+		barenco_decomp(circuit, compute_gate, controls0, free_qubit, params);
+		barenco_decomp(circuit, g, controls1, target, params);
+		barenco_decomp(circuit, uncompute_gate, controls0, free_qubit, params);
+		barenco_decomp(circuit, g, controls1, target, params);
+	}
+
 }
 
 } /* namespace detail */

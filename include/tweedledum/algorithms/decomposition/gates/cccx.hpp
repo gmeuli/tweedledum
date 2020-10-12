@@ -14,7 +14,7 @@ namespace tweedledum::detail {
 template<typename Network>
 void cccx(Network& network, std::vector<wire::id> const& controls, wire::id  const target)
 {
-	assert(controls.size() == 4);
+	assert(controls.size() == 3);
 	const auto a = controls[0];
 	const auto b = controls[1];
 	const auto c = controls[2];
