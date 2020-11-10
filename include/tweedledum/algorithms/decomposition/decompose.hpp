@@ -25,6 +25,7 @@ struct decomp_params {
 	bool allow_ancilla = true;
 	bool use_t_par = false;
 	bool use_relative_phase = false;
+	bool enable_ccx4T = false;
 };
 
 #pragma region Decomposition circuit builder (detail)
@@ -185,6 +186,11 @@ public:
 		switch (g.id()) {
 		// Non-parameterisable gates
 		case gate_ids::ncx:
+			if(this -> wire_mode(t) == wire::modes::clean_qubit)
+			{
+				ccx4T(*this, c0, c1, t);
+				return;
+			}
 			create_op(gate_lib::h, t);
 			if (params_.use_t_par) {
 				ccz_tpar(*this, c0, c1, t);

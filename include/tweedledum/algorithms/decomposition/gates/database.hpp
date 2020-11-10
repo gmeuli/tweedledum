@@ -7,3 +7,4 @@
 #include "ccccx.hpp"
 #include "cccx.hpp"
 #include "ccz.hpp"
+#include "ccx4T.hpp"

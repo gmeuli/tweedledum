@@ -110,7 +110,8 @@ void barenco_decomp(Circuit& circuit, gate const& g, std::vector<wire::id> const
 	
 	if (workspace_size == 0 && params.enable_ancilla) {
 		std::cout << "clean ancilla added\n";
-		wire::id ancilla = circuit.create_qubit();
+		wire::id ancilla = circuit.create_qubit(wire::modes::clean_qubit);
+
 		controls1.push_back(ancilla);
 		barenco_decomp(circuit, compute_gate, controls0, ancilla, params);
 		barenco_decomp(circuit, g, controls1, target, params);

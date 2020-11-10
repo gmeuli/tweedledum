@@ -199,11 +199,11 @@ void write_dotqc(Network const& network, std::ostream& os, int inputs = 0)
 			break;
 
 		case gate_ids::s:
-			os << fmt::format("S {}\n", network.wire_name(op.target()));
+			os << fmt::format("P {}\n", network.wire_name(op.target()));
 			break;
 
 		case gate_ids::sdg:
-			os << fmt::format("S* {}\n", network.wire_name(op.target()));
+			os << fmt::format("P* {}\n", network.wire_name(op.target()));
 			break;
 
 		case gate_ids::t:

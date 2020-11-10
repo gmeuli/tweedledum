@@ -135,6 +135,7 @@ enum class modes : uint8_t {
 	out,
 	inout,
 	ancilla,
+	clean_qubit
 };
 
 /* \brief Class used for storing wire information in a circuit
